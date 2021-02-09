@@ -100,7 +100,7 @@ class V1Dataset(BaseDataset):
 
         final_transforms_A, final_transforms_B = self.final_transforms
         data_A = final_transforms_A(image=_data_A)
-        data_B = final_transforms_A(image=_data_B)
+        data_B = final_transforms_B(image=_data_B)
 
         # return {'data_A': data_A, 'data_B': data_B, 'path': path}
         return {'A': data_A, 'B': data_B, 'A_paths': A_path, 'B_paths': B_path}
