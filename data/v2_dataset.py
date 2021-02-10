@@ -19,11 +19,11 @@ from albumentations import Compose
 import albumentations.augmentations.transforms as tr
 from PIL import Image
 import numpy as np
-# from data.image_folder import make_dataset
-# from PIL import Image
+import cv2
+from skimage import io
 
 
-class V1Dataset(BaseDataset):
+class V2Dataset(BaseDataset):
     """A template dataset class for you to implement custom datasets."""
     @staticmethod
     def modify_commandline_options(parser, is_train):
@@ -90,8 +90,8 @@ class V1Dataset(BaseDataset):
         A_path = self.A_paths[index % self.A_size]
         B_path = self.B_paths[index % self.B_size]
 
-        A_img = np.array(Image.open(A_path))
-        B_img = np.array(Image.open(B_path).convert('RGB'))
+        A_img = np.array(io.imread(A_path))
+        B_img = np.array(cv2.imread(B_path))
 
         transformed = self.transform(image=A_img, imageB=B_img)
 
@@ -99,8 +99,8 @@ class V1Dataset(BaseDataset):
         _data_B = transformed['imageB']
 
         final_transforms_A, final_transforms_B = self.final_transforms
-        data_A = final_transforms_A(image=_data_A)
-        data_B = final_transforms_B(image=_data_B)
+        data_A = final_transforms_A(image=_data_A)['image']
+        data_B = final_transforms_B(image=_data_B)['image']
 
         # return {'data_A': data_A, 'data_B': data_B, 'path': path}
         return {'A': data_A, 'B': data_B, 'A_paths': A_path, 'B_paths': B_path}
@@ -135,13 +135,12 @@ def get_transformv2(opt):
     return Compose(transform_list, additional_targets={'imageB':'image'})
 
 def get_final_transforms_v2(opt):
-    compose_A = Compose(
+    compose_A = Compose([
         tr.ToFloat(max_value=1024),
-        tr.Normalize(),
         ToTensorV2()
-    )
-    compose_B = Compose(
-        tr.Normalize(),
+    ])
+    compose_B = Compose([
+        tr.ToFloat(max_value=256),
         ToTensorV2()
-    )
+    ])
     return compose_A, compose_B
